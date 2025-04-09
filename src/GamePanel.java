@@ -1,3 +1,4 @@
+
 /**
  * @Author: XyeHyin
  * @Date: 2025/4/9 10:57
@@ -44,6 +45,8 @@ public class GamePanel extends JPanel implements ActionListener {
     private int powerUpSpawnCounter = 0;
     private final int POWER_UP_SPAWN_DELAY = 600; // 10秒
 
+    private TankGame.GameMode gameMode;
+
     public GamePanel(TankGame tankGame) {
         this.tankGame = tankGame;
         this.random = new Random();
@@ -64,29 +67,29 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void initGame(int startLevel) {
-        // 重置游戏状态
+        initGame(startLevel, TankGame.GameMode.CHALLENGE);
+    }
+
+    public void initGame(int startLevel, TankGame.GameMode mode) {
+        this.gameMode = mode;
         inGame = true;
         score = 0;
         level = startLevel;
         collisionCooldown = 0;
 
-        // 创建玩家坦克
+        // 创建玩家坦克，在闯关模式下重置为满血
         playerTank = new PlayerTank(400, 500);
+        if (mode == TankGame.GameMode.CHALLENGE) {
+            playerTank.setHealth(100);
+        }
 
-        // 初始化敌人坦克列表
+        // 初始化敌人、子弹、道具、爆炸和障碍物
         enemies = new ArrayList<>();
         spawnEnemiesForLevel(level);
 
-        // 初始化子弹列表
         bullets = new ArrayList<>();
-
-        // 初始化道具列表
         powerUps = new ArrayList<>();
-
-        // 初始化爆炸效果列表
         explosions = new ArrayList<>();
-
-        // 初始化障碍物
         obstacles = new ArrayList<>();
         createObstacles();
 
@@ -191,6 +194,7 @@ public class GamePanel extends JPanel implements ActionListener {
         g.setFont(new Font("HarmonyOS Sans", Font.BOLD, 16));
         g.drawString("分数: " + score, 20, 30);
         g.drawString("等级: " + level, 20, 50);
+        g.drawString("关卡: " + level, 350, 30); // 新增关卡显示，居中上方
 
         // 绘制生命条
         g.drawString("生命值: ", 600, 30);
@@ -240,7 +244,8 @@ public class GamePanel extends JPanel implements ActionListener {
             continueMsg = "按 ENTER 重新开始";
         }
 
-        g.drawString(continueMsg, (getWidth() - getFontMetrics(smallFont).stringWidth(continueMsg)) / 2, getHeight() / 2 + 50);
+        g.drawString(continueMsg, (getWidth() - getFontMetrics(smallFont).stringWidth(continueMsg)) / 2,
+                getHeight() / 2 + 50);
 
         String menuMsg = "按 ESC 返回主菜单";
         g.drawString(menuMsg, (getWidth() - getFontMetrics(smallFont).stringWidth(menuMsg)) / 2, getHeight() / 2 + 100);
@@ -289,25 +294,25 @@ public class GamePanel extends JPanel implements ActionListener {
     private void updateEnemies() {
         for (EnemyTank enemy : enemies) {
             if (enemy.isVisible()) {
-                // 保存当前位置
                 int oldX = enemy.getX();
                 int oldY = enemy.getY();
 
-                // 更新敌人状态
                 enemy.update();
 
-                // 检测坦克之间的碰撞
+                // 如果敌人碰到屏幕边界，则改变方向
+                if (enemy.getX() <= 0 || enemy.getX() >= 800 - enemy.width ||
+                        enemy.getY() <= 0 || enemy.getY() >= 600 - enemy.height) {
+                    enemy.changeDirection();
+                }
+
                 checkTankCollision(enemy);
 
-                // 检测坦克与障碍物的碰撞
                 if (checkObstacleCollisionForTank(enemy)) {
-                    // 如果发生碰撞，恢复到原位置并更改方向
                     enemy.setX(oldX);
                     enemy.setY(oldY);
                     enemy.changeDirection();
                 }
 
-                // 敌人发射子弹
                 if (random.nextInt(100) < enemy.getShootingRate()) {
                     bullets.addAll(enemy.fire());
                 }
@@ -370,7 +375,8 @@ public class GamePanel extends JPanel implements ActionListener {
             int x = random.nextInt(700) + 50;
             int y = random.nextInt(400) + 100;
 
-            PowerUp.PowerUpType type = PowerUp.PowerUpType.values()[random.nextInt(PowerUp.PowerUpType.values().length)];
+            PowerUp.PowerUpType type = PowerUp.PowerUpType.values()[random
+                    .nextInt(PowerUp.PowerUpType.values().length)];
             powerUps.add(new PowerUp(x, y, type));
 
             powerUpSpawnCounter = 0;
@@ -423,7 +429,9 @@ public class GamePanel extends JPanel implements ActionListener {
             }
 
             // 如果冷却时间结束，对玩家造成伤害（除非有护盾）
-            if (collisionCooldown == 0 && !playerTank.hasShield()) {
+            if (playerTank.hasShield()) {
+                playerTank.deactivateShield();
+            } else if (collisionCooldown == 0) {
                 playerTank.takeDamage(COLLISION_DAMAGE);
                 collisionCooldown = COLLISION_COOLDOWN_TIME;
 
@@ -431,8 +439,7 @@ public class GamePanel extends JPanel implements ActionListener {
                 createExplosion(
                         (playerTank.getX() + tank.getX()) / 2,
                         (playerTank.getY() + tank.getY()) / 2,
-                        false
-                );
+                        false);
             }
         }
 
@@ -522,10 +529,12 @@ public class GamePanel extends JPanel implements ActionListener {
 
         // 检查与玩家坦克的碰撞
         if (!bullet.isPlayerBullet() && playerTank.getBounds().intersects(bulletBounds)) {
-            if (!playerTank.hasShield()) {
+            if (playerTank.hasShield()) {
+                playerTank.deactivateShield();
+            } else {
                 playerTank.hit(bullet.getDamage());
-                createExplosion(bullet.getX(), bullet.getY(), false);
             }
+            createExplosion(bullet.getX(), bullet.getY(), false);
             bullet.setVisible(false);
             return;
         }
@@ -580,29 +589,27 @@ public class GamePanel extends JPanel implements ActionListener {
     }
 
     public void nextLevel() {
-        if (!playerTank.isAlive()) {
-            initGame(1); // 如果玩家死亡，重新开始游戏
+        if (gameMode == TankGame.GameMode.SELECT) {
+            tankGame.returnToMenu();
         } else {
-            level++; // 进入下一关
+            if (!playerTank.isAlive()) {
+                initGame(1, TankGame.GameMode.CHALLENGE);
+            } else {
+                level++;
+                playerTank = new PlayerTank(400, 500);
+                playerTank.setHealth(100);
 
-            // 保留玩家的生命值和得分
-            int savedHealth = playerTank.getHealth();
+                enemies.clear();
+                bullets.clear();
+                powerUps.clear();
+                explosions.clear();
+                obstacles.clear();
 
-            // 初始化新关卡
-            enemies.clear();
-            bullets.clear();
-            powerUps.clear();
-            explosions.clear();
-            obstacles.clear();
+                spawnEnemiesForLevel(level);
+                createObstacles();
 
-            spawnEnemiesForLevel(level);
-            createObstacles();
-
-            // 重置玩家坦克位置，但保持生命值
-            playerTank = new PlayerTank(400, 500);
-            playerTank.setHealth(savedHealth);
-
-            inGame = true;
+                inGame = true;
+            }
         }
     }
 

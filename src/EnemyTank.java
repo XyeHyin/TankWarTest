@@ -6,7 +6,6 @@
  * @Description: TODO
  * @Version:1.0
  */
-import java.awt.*;
 import java.util.Random;
 
 public abstract class EnemyTank extends Tank {

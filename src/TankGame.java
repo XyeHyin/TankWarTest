@@ -8,8 +8,6 @@
  */
 import javax.swing.*;
 import java.awt.*;
-import java.awt.event.ActionEvent;
-import java.awt.event.ActionListener;
 
 public class TankGame extends JFrame {
 
@@ -17,6 +15,10 @@ public class TankGame extends JFrame {
     private StartPanel startPanel;
     private CardLayout cardLayout;
     private JPanel mainPanel;
+
+    public enum GameMode {
+        SELECT, CHALLENGE
+    }
 
     public TankGame() {
         setTitle("坦克大战");
@@ -41,8 +43,9 @@ public class TankGame extends JFrame {
         setVisible(true);
     }
 
-    public void startGame(int level) {
-        gamePanel.initGame(level);
+    // 新增带模式参数的开始游戏方法
+    public void startGame(int level, GameMode mode) {
+        gamePanel.initGame(level, mode);
         cardLayout.show(mainPanel, "Game");
         gamePanel.requestFocus();
     }

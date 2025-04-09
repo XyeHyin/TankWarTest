@@ -1,3 +1,4 @@
+
 /**
  * @Author: XyeHyin
  * @Date: 2025/4/9 10:59
@@ -8,6 +9,7 @@
  */
 import java.awt.*;
 import java.awt.event.KeyEvent;
+
 import java.util.ArrayList;
 import java.util.List;
 
@@ -92,6 +94,12 @@ public class PlayerTank extends Tank {
                 scatterShotActive = false;
             }
         }
+    }
+
+    // 新增解除护盾方法
+    public void deactivateShield() {
+        shieldActive = false;
+        shieldTimer = 0;
     }
 
     @Override
@@ -210,21 +218,31 @@ public class PlayerTank extends Tank {
 
     private Direction getLeftDirection(Direction dir) {
         switch (dir) {
-            case UP: return Direction.LEFT;
-            case LEFT: return Direction.DOWN;
-            case DOWN: return Direction.RIGHT;
-            case RIGHT: return Direction.UP;
-            default: return dir;
+            case UP:
+                return Direction.LEFT;
+            case LEFT:
+                return Direction.DOWN;
+            case DOWN:
+                return Direction.RIGHT;
+            case RIGHT:
+                return Direction.UP;
+            default:
+                return dir;
         }
     }
 
     private Direction getRightDirection(Direction dir) {
         switch (dir) {
-            case UP: return Direction.RIGHT;
-            case RIGHT: return Direction.DOWN;
-            case DOWN: return Direction.LEFT;
-            case LEFT: return Direction.UP;
-            default: return dir;
+            case UP:
+                return Direction.RIGHT;
+            case RIGHT:
+                return Direction.DOWN;
+            case DOWN:
+                return Direction.LEFT;
+            case LEFT:
+                return Direction.UP;
+            default:
+                return dir;
         }
     }
 

@@ -1,5 +1,12 @@
+/**
+ * @Author: XyeHyin
+ * @Date: 2025/4/9 10:57
+ * @packageName:IntelliJ IDEA
+ * @ClassNam:
+ * @Description: TODO
+ * @Version:1.0
+ */
 import java.awt.*;
-import java.util.ArrayList;
 import java.util.List;
 
 public class HeavyEnemyTank extends EnemyTank {

@@ -27,7 +27,7 @@ public class StartPanel extends JPanel {
         titleLabel.setForeground(Color.GREEN);
 
         JPanel buttonPanel = new JPanel();
-        buttonPanel.setLayout(new GridLayout(4, 1, 0, 20));
+        buttonPanel.setLayout(new GridLayout(6, 1, 0, 20));
         buttonPanel.setOpaque(false);
 
         // 创建关卡选择器
@@ -37,7 +37,7 @@ public class StartPanel extends JPanel {
         levelLabel.setForeground(Color.WHITE);
         levelLabel.setFont(new Font("HarmonyOS Sans", Font.BOLD, 18));
 
-        Integer[] levels = {1, 2, 3, 4, 5, 6, 7, 8, 9, 10};
+        Integer[] levels = { 1, 2, 3, 4, 5, 6, 7, 8, 9, 10 };
         levelSelector = new JComboBox<>(levels);
         levelSelector.setFont(new Font("HarmonyOS Sans", Font.BOLD, 18));
         levelSelector.setPreferredSize(new Dimension(80, 30));
@@ -45,11 +45,37 @@ public class StartPanel extends JPanel {
         levelPanel.add(levelLabel);
         levelPanel.add(levelSelector);
 
+        // 新增游戏模式选择
+        JPanel modePanel = new JPanel();
+        modePanel.setOpaque(false);
+        JLabel modeLabel = new JLabel("游戏模式: ");
+        modeLabel.setForeground(Color.WHITE);
+        modeLabel.setFont(new Font("HarmonyOS Sans", Font.BOLD, 18));
+        JRadioButton selectModeButton = new JRadioButton("选关模式", true);
+        selectModeButton.setOpaque(false);
+        selectModeButton.setForeground(Color.WHITE);
+        selectModeButton.setFont(new Font("HarmonyOS Sans", Font.BOLD, 16));
+        JRadioButton challengeModeButton = new JRadioButton("闯关模式");
+        challengeModeButton.setOpaque(false);
+        challengeModeButton.setForeground(Color.WHITE);
+        challengeModeButton.setFont(new Font("HarmonyOS Sans", Font.BOLD, 16));
+        ButtonGroup modeGroup = new ButtonGroup();
+        modeGroup.add(selectModeButton);
+        modeGroup.add(challengeModeButton);
+        modePanel.add(modeLabel);
+        modePanel.add(selectModeButton);
+        modePanel.add(challengeModeButton);
+
         startButton = new JButton("开始游戏");
         startButton.setFont(new Font("HarmonyOS Sans", Font.BOLD, 20));
         startButton.addActionListener(e -> {
-            int selectedLevel = (Integer) levelSelector.getSelectedItem();
-            tankGame.startGame(selectedLevel);
+            if (selectModeButton.isSelected()) {
+                int selectedLevel = (Integer) levelSelector.getSelectedItem();
+                tankGame.startGame(selectedLevel, TankGame.GameMode.SELECT);
+            } else {
+                // 闯关模式始终从第一关开始
+                tankGame.startGame(1, TankGame.GameMode.CHALLENGE);
+            }
         });
 
         instructionsButton = new JButton("游戏说明");
@@ -60,16 +86,22 @@ public class StartPanel extends JPanel {
         JPanel spacerPanel = new JPanel();
         spacerPanel.setOpaque(false);
 
+        // 底部“POWERED BY 星野花音”
+        JLabel poweredByLabel = new JLabel("POWERED BY 星野花音", JLabel.CENTER);
+        poweredByLabel.setForeground(Color.LIGHT_GRAY);
+        poweredByLabel.setFont(new Font("HarmonyOS Sans", Font.BOLD, 14));
+
         // 添加所有组件
         buttonPanel.add(spacerPanel);
         buttonPanel.add(levelPanel);
+        buttonPanel.add(modePanel);
         buttonPanel.add(startButton);
         buttonPanel.add(instructionsButton);
 
         add(titleLabel, BorderLayout.NORTH);
         add(buttonPanel, BorderLayout.CENTER);
+        add(poweredByLabel, BorderLayout.SOUTH);
     }
-
     private void showInstructions() {
         JDialog dialog = new JDialog(SwingUtilities.getWindowAncestor(this), "游戏说明", Dialog.ModalityType.APPLICATION_MODAL);
         dialog.setSize(500, 400);

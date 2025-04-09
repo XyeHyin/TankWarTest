@@ -1,4 +1,11 @@
-import java.awt.*;
+/**
+ * @Author: XyeHyin
+ * @Date: 2025/4/9 10:57
+ * @packageName:IntelliJ IDEA
+ * @ClassNam:
+ * @Description: TODO
+ * @Version:1.0
+ */
 import java.util.ArrayList;
 import java.util.List;
 
@@ -23,12 +30,8 @@ public abstract class Tank extends GameObject {
     public void move() {
         x += dx;
         y += dy;
-
         // 边界检查
-        if (x < 0) {
-            x = 0;
-        }
-
+        if (x < 0) x = 0;
         if (y < 0) {
             y = 0;
         }
